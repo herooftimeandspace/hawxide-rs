@@ -236,6 +236,8 @@ fn draw_hawk(area: Rect, sprite: &Sprite, origin: (i16, u16), buf: &mut Buffer) 
         '%' => Style::default().fg(Color::Rgb(71, 48, 34)),
         '#' => Style::default().fg(Color::Rgb(36, 25, 20)),
         '=' => Style::default().fg(Color::Rgb(221, 185, 130)),
+        '-' | '.' | ':' => Style::default().fg(Color::Rgb(236, 205, 155)),
+        '*' => Style::default().fg(Color::Rgb(89, 57, 35)),
         '+' => Style::default().fg(Color::Rgb(245, 204, 44)),
         '<' => Style::default().fg(Color::Rgb(203, 103, 32)),
         '>' => Style::default().fg(Color::Rgb(38, 28, 24)),
