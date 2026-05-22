@@ -51,6 +51,12 @@ fn run(terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> io::Result<()> {
             && let Event::Key(key) = event::read()?
             && key.kind == KeyEventKind::Press
         {
+            if !game.started() && key.code != KeyCode::Esc {
+                game.start();
+                last_tick = Instant::now();
+                continue;
+            }
+
             match key.code {
                 KeyCode::Char('q') | KeyCode::Esc => break,
                 KeyCode::Up | KeyCode::Char('e') | KeyCode::Char('E') => {

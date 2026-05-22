@@ -15,6 +15,8 @@ tail markings.
 
 ## Gameplay
 
+- The game opens on a `HAWXIDE` splash screen.
+- Press any key to start from the splash screen.
 - The hawk starts in the middle lane.
 - Press `Up` or `e` to move one lane higher.
 - Press `Down` or `d` to move one lane lower.

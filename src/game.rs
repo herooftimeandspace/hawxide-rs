@@ -91,6 +91,7 @@ pub struct BackgroundObject {
 
 #[derive(Clone, Debug)]
 pub struct Game {
+    started: bool,
     player_lane: Lane,
     obstacles: Vec<Obstacle>,
     background_objects: Vec<BackgroundObject>,
@@ -153,6 +154,7 @@ pub static TREE: Sprite = Sprite {
 impl Game {
     pub fn new() -> Self {
         Self {
+            started: false,
             player_lane: Lane::Middle,
             obstacles: Vec::new(),
             background_objects: Vec::new(),
@@ -162,6 +164,14 @@ impl Game {
             background_progress: 0.0,
             game_over: false,
         }
+    }
+
+    pub fn started(&self) -> bool {
+        self.started
+    }
+
+    pub fn start(&mut self) {
+        self.started = true;
     }
 
     pub fn player_lane(&self) -> Lane {
@@ -185,7 +195,7 @@ impl Game {
     }
 
     pub fn move_player(&mut self, direction: MoveDirection) {
-        if self.game_over {
+        if !self.started || self.game_over {
             return;
         }
 
@@ -196,7 +206,7 @@ impl Game {
     }
 
     pub fn tick(&mut self, elapsed: Duration, playfield: Playfield) {
-        if self.game_over {
+        if !self.started || self.game_over {
             return;
         }
 
@@ -422,8 +432,32 @@ mod tests {
     }
 
     #[test]
+    fn game_waits_on_splash_until_started() {
+        let mut game = Game::new();
+
+        assert!(!game.started());
+        game.tick(Duration::from_secs(3), TEST_FIELD);
+
+        assert_eq!(game.score(), 0);
+        assert!(game.obstacles().is_empty());
+    }
+
+    #[test]
+    fn start_allows_gameplay_ticks() {
+        let mut game = Game::new();
+
+        game.start();
+        game.tick(Duration::from_secs(1), TEST_FIELD);
+
+        assert!(game.started());
+        assert_eq!(game.score(), 1);
+        assert_eq!(game.obstacles().len(), 1);
+    }
+
+    #[test]
     fn movement_steps_one_lane_and_respects_boundaries() {
         let mut game = Game::new();
+        game.start();
 
         game.move_player(MoveDirection::Up);
         assert_eq!(game.player_lane(), Lane::High);
@@ -467,6 +501,7 @@ mod tests {
     #[test]
     fn scoring_counts_survived_seconds() {
         let mut game = Game::new();
+        game.start();
 
         game.tick(Duration::from_millis(999), TEST_FIELD);
         assert_eq!(game.score(), 0);
@@ -477,6 +512,7 @@ mod tests {
     #[test]
     fn spawn_spacing_preserves_navigation_gap() {
         let mut game = Game::new();
+        game.start();
 
         game.tick(Duration::from_millis(1), TEST_FIELD);
         assert_eq!(game.obstacles().len(), 1);
@@ -490,6 +526,7 @@ mod tests {
     #[test]
     fn background_objects_do_not_trigger_collision() {
         let mut game = Game::new();
+        game.start();
 
         game.tick(Duration::from_millis(1), TEST_FIELD);
         assert_eq!(game.background_objects().len(), 1);
@@ -515,6 +552,7 @@ mod tests {
     #[test]
     fn collision_sets_game_over_and_freezes_movement() {
         let mut game = Game::new();
+        game.start();
         game.force_obstacle_for_test(ObstacleKind::Truck, PLAYER_X - 1);
 
         game.apply_collision(TEST_FIELD);

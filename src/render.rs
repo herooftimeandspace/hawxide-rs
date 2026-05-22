@@ -48,6 +48,11 @@ impl Widget for GameWidget<'_> {
             return;
         }
 
+        if !self.game.started() {
+            draw_splash(inner, buf);
+            return;
+        }
+
         let playfield = Playfield {
             width: inner.width,
             height: inner.height,
@@ -83,6 +88,65 @@ impl Widget for GameWidget<'_> {
             );
         }
     }
+}
+
+fn draw_splash(area: Rect, buf: &mut Buffer) {
+    let title = [
+        "H   H  AAAAA  W   W X   X IIIII DDDD  EEEEE",
+        "H   H A     A W   W  X X    I   D   D E    ",
+        "HHHHH AAAAAAA W W W   X     I   D   D EEEE ",
+        "H   H A     A WW WW  X X    I   D   D E    ",
+        "H   H A     A W   W X   X IIIII DDDD  EEEEE",
+    ];
+
+    let title_y = area.y + area.height.saturating_sub(10) / 2;
+    for (offset, line) in title.iter().enumerate() {
+        draw_centered(
+            area,
+            title_y + offset as u16,
+            line,
+            Style::default().fg(Color::Red),
+            buf,
+        );
+    }
+
+    draw_centered(
+        area,
+        title_y + title.len() as u16 + 2,
+        "Press any key to start",
+        Style::default().fg(Color::Yellow),
+        buf,
+    );
+    draw_centered(
+        area,
+        title_y + title.len() as u16 + 4,
+        "Up arrow or e: rise one lane",
+        Style::default().fg(Color::Gray),
+        buf,
+    );
+    draw_centered(
+        area,
+        title_y + title.len() as u16 + 5,
+        "Down arrow or d: dive one lane",
+        Style::default().fg(Color::Gray),
+        buf,
+    );
+    draw_centered(
+        area,
+        title_y + title.len() as u16 + 6,
+        "Avoid Oxide racks. q quits during play.",
+        Style::default().fg(Color::DarkGray),
+        buf,
+    );
+}
+
+fn draw_centered(area: Rect, y: u16, text: &str, style: Style, buf: &mut Buffer) {
+    if y >= area.y + area.height {
+        return;
+    }
+
+    let x = area.x + area.width.saturating_sub(text.len() as u16) / 2;
+    buf.set_string(x, y, text, style);
 }
 
 fn draw_ascii_border(area: Rect, buf: &mut Buffer) {
