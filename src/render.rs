@@ -201,8 +201,6 @@ fn draw_obstacle(area: Rect, obstacle: &Obstacle, playfield: Playfield, buf: &mu
             '┌' | '┐' | '└' | '┘' | '┬' | '┴' | '─' | '│' => {
                 Style::default().fg(Color::Gray)
             }
-            '○' => Style::default().fg(Color::DarkGray),
-            'T' | 'R' | 'U' | 'C' | 'K' => Style::default().fg(Color::DarkGray),
             _ => Style::default().fg(Color::White),
         },
     );

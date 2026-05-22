@@ -37,10 +37,10 @@ large terminals so the obstacle spacing and art proportions remain playable.
 Three obstacle types scroll from right to left:
 
 - Low lane: a horizontal Oxide rack lying on its side.
-- Middle/low band: a truck carrying an Oxide rack.
+- Middle/low band: a tall standing Oxide rack.
 - High/middle band: an Oxide rack dropped by parachute.
 
-The low rack is confined to the low lane. The truck may occupy the combined
+The low rack is confined to the low lane. The tall rack may occupy the combined
 middle and low lanes. The parachute rack may occupy the combined high and
 middle lanes. Obstacle spawning preserves enough horizontal space for the
 player to step between lanes, so the game should not create impossible

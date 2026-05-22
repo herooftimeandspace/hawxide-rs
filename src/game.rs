@@ -37,7 +37,7 @@ pub enum MoveDirection {
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum ObstacleKind {
     Low,
-    Truck,
+    Tall,
     Parachute,
 }
 
@@ -142,15 +142,19 @@ pub static LOW_RACK: Sprite = Sprite {
     ],
 };
 
-pub static TRUCK_RACK: Sprite = Sprite {
+pub static TALL_RACK: Sprite = Sprite {
     lines: &[
-        " ╔══════════════╗ ",
-        " ║▌▌▌▌▌▌▌▌▌▌▌▌║ ",
-        " ║▌▌▌▌▌▌▌▌▌▌▌▌║ ",
-        " ╚══════════════╝ ",
-        "    ┌────────┐    ",
-        " ┌──┴─TRUCK──┴──┐ ",
-        " └──○────────○──┘ ",
+        "╔════════╗",
+        "║┌──────┐║",
+        "║│▓▓▓▓▓▓│║",
+        "║│▓▓▓▓▓▓│║",
+        "║│▓▓▓▓▓▓│║",
+        "╠════════╣",
+        "║│░░░░░░│║",
+        "╠════════╣",
+        "║│▓▓▓▓▓▓│║",
+        "║│▓▓▓▓▓▓│║",
+        "╚════════╝",
     ],
 };
 
@@ -319,7 +323,7 @@ impl Game {
 
         let kind = match self.next_obstacle % 3 {
             0 => ObstacleKind::Low,
-            1 => ObstacleKind::Truck,
+            1 => ObstacleKind::Tall,
             _ => ObstacleKind::Parachute,
         };
         self.next_obstacle += 1;
@@ -373,7 +377,7 @@ impl Default for Game {
 pub fn sprite_for(kind: ObstacleKind) -> &'static Sprite {
     match kind {
         ObstacleKind::Low => &LOW_RACK,
-        ObstacleKind::Truck => &TRUCK_RACK,
+        ObstacleKind::Tall => &TALL_RACK,
         ObstacleKind::Parachute => &PARACHUTE_RACK,
     }
 }
@@ -410,7 +414,7 @@ pub fn lane_band(lane: Lane, playfield: Playfield) -> Band {
 pub fn obstacle_band(kind: ObstacleKind, playfield: Playfield) -> Band {
     match kind {
         ObstacleKind::Low => lane_band(Lane::Low, playfield),
-        ObstacleKind::Truck => Band {
+        ObstacleKind::Tall => Band {
             top: lane_band(Lane::Middle, playfield).top,
             bottom: lane_band(Lane::Low, playfield).bottom,
         },
@@ -434,7 +438,7 @@ pub fn obstacle_origin(obstacle: &Obstacle, playfield: Playfield) -> (i16, u16) 
     let available_height = band.bottom.saturating_sub(band.top);
     let y = match obstacle.kind {
         ObstacleKind::Low => band.top + available_height.saturating_sub(sprite.height()) / 2,
-        ObstacleKind::Truck => band.top,
+        ObstacleKind::Tall => band.top + available_height.saturating_sub(sprite.height()) / 2,
         ObstacleKind::Parachute => band.top,
     };
     (obstacle.x, y)
@@ -511,8 +515,8 @@ mod tests {
     fn obstacle_bands_match_their_allowed_vertical_space() {
         assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).top, 24);
         assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).bottom, 36);
-        assert_eq!(obstacle_band(ObstacleKind::Truck, TEST_FIELD).top, 12);
-        assert_eq!(obstacle_band(ObstacleKind::Truck, TEST_FIELD).bottom, 36);
+        assert_eq!(obstacle_band(ObstacleKind::Tall, TEST_FIELD).top, 12);
+        assert_eq!(obstacle_band(ObstacleKind::Tall, TEST_FIELD).bottom, 36);
         assert_eq!(obstacle_band(ObstacleKind::Parachute, TEST_FIELD).top, 0);
         assert_eq!(
             obstacle_band(ObstacleKind::Parachute, TEST_FIELD).bottom,
@@ -524,7 +528,7 @@ mod tests {
     fn sprites_fit_inside_their_bands() {
         for kind in [
             ObstacleKind::Low,
-            ObstacleKind::Truck,
+            ObstacleKind::Tall,
             ObstacleKind::Parachute,
         ] {
             let sprite = sprite_for(kind);
@@ -585,7 +589,7 @@ mod tests {
     #[test]
     fn visible_cell_overlap_collides() {
         let mut game = Game::new();
-        game.force_obstacle_for_test(ObstacleKind::Truck, PLAYER_X - 1);
+        game.force_obstacle_for_test(ObstacleKind::Tall, PLAYER_X - 1);
 
         assert!(game.detect_collision(TEST_FIELD));
     }
@@ -593,7 +597,7 @@ mod tests {
     #[test]
     fn transparent_sprite_space_does_not_collide() {
         let mut game = Game::new();
-        game.force_obstacle_for_test(ObstacleKind::Truck, PLAYER_X + HAWK.width() + 2);
+        game.force_obstacle_for_test(ObstacleKind::Tall, PLAYER_X + HAWK.width() + 2);
 
         assert!(!game.detect_collision(TEST_FIELD));
     }
@@ -602,7 +606,7 @@ mod tests {
     fn collision_sets_game_over_and_freezes_movement() {
         let mut game = Game::new();
         game.start();
-        game.force_obstacle_for_test(ObstacleKind::Truck, PLAYER_X - 1);
+        game.force_obstacle_for_test(ObstacleKind::Tall, PLAYER_X - 1);
 
         game.apply_collision(TEST_FIELD);
         assert!(game.is_game_over());
