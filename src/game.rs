@@ -45,8 +45,10 @@ pub enum ObstacleKind {
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum BackgroundKind {
-    Cloud,
-    Tree,
+    CloudPuff,
+    CloudStreak,
+    TreeWide,
+    TreeNarrow,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -99,6 +101,7 @@ pub struct Game {
     background_objects: Vec<BackgroundObject>,
     rng_state: u64,
     last_obstacle_kind: Option<ObstacleKind>,
+    last_background_kind: Option<BackgroundKind>,
     score_elapsed: Duration,
     scroll_progress: f64,
     background_progress: f64,
@@ -212,7 +215,7 @@ pub static PARACHUTE_RACK: Sprite = Sprite {
     ],
 };
 
-pub static CLOUD: Sprite = Sprite {
+pub static CLOUD_PUFF: Sprite = Sprite {
     lines: &[
         "      .----.      ",
         "   .-(      )-.   ",
@@ -222,7 +225,17 @@ pub static CLOUD: Sprite = Sprite {
     ],
 };
 
-pub static TREE: Sprite = Sprite {
+pub static CLOUD_STREAK: Sprite = Sprite {
+    lines: &[
+        "        .------.          ",
+        "   .---(        )---.     ",
+        "  (                  )    ",
+        "   `--.          .--'     ",
+        "       `--------'         ",
+    ],
+};
+
+pub static TREE_WIDE: Sprite = Sprite {
     lines: &[
         "          /\\          ",
         "         /**\\         ",
@@ -269,6 +282,53 @@ pub static TREE: Sprite = Sprite {
     ],
 };
 
+pub static TREE_NARROW: Sprite = Sprite {
+    lines: &[
+        "       /\\       ",
+        "      /**\\      ",
+        "     /****\\     ",
+        "    /******\\    ",
+        "   /********\\   ",
+        "  /**********\\  ",
+        " /************\\ ",
+        "/**************\\",
+        "      /**\\      ",
+        "     /****\\     ",
+        "    /******\\    ",
+        "   /********\\   ",
+        "  /**********\\  ",
+        " /************\\ ",
+        "/**************\\",
+        "     /****\\     ",
+        "    /******\\    ",
+        "   /********\\   ",
+        "  /**********\\  ",
+        " /************\\ ",
+        "/**************\\",
+        "    /******\\    ",
+        "   /********\\   ",
+        "  /**********\\  ",
+        " /************\\ ",
+        "/**************\\",
+        "   /********\\   ",
+        "  /**********\\  ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+        "       ||       ",
+    ],
+};
+
 impl Game {
     pub fn new() -> Self {
         Self {
@@ -278,6 +338,7 @@ impl Game {
             background_objects: Vec::new(),
             rng_state: RNG_SEED,
             last_obstacle_kind: None,
+            last_background_kind: None,
             score_elapsed: Duration::ZERO,
             scroll_progress: 0.0,
             background_progress: 0.0,
@@ -447,15 +508,37 @@ impl Game {
             return;
         }
 
-        let kind = if self.background_objects.len().is_multiple_of(2) {
-            BackgroundKind::Cloud
-        } else {
-            BackgroundKind::Tree
-        };
+        let kind = self.random_background_kind();
         self.background_objects.push(BackgroundObject {
             kind,
             x: viewport_width as i16,
         });
+    }
+
+    fn random_background_kind(&mut self) -> BackgroundKind {
+        self.rng_state = self
+            .rng_state
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1);
+
+        let mut kind = match (self.rng_state >> 32) % 4 {
+            0 => BackgroundKind::CloudPuff,
+            1 => BackgroundKind::CloudStreak,
+            2 => BackgroundKind::TreeWide,
+            _ => BackgroundKind::TreeNarrow,
+        };
+
+        if self.last_background_kind == Some(kind) {
+            kind = match kind {
+                BackgroundKind::CloudPuff => BackgroundKind::CloudStreak,
+                BackgroundKind::CloudStreak => BackgroundKind::TreeWide,
+                BackgroundKind::TreeWide => BackgroundKind::TreeNarrow,
+                BackgroundKind::TreeNarrow => BackgroundKind::CloudPuff,
+            };
+        }
+
+        self.last_background_kind = Some(kind);
+        kind
     }
 
     fn speed_cells_per_second(&self) -> f64 {
@@ -491,8 +574,10 @@ pub fn sprite_for(kind: ObstacleKind) -> &'static Sprite {
 
 pub fn background_sprite_for(kind: BackgroundKind) -> &'static Sprite {
     match kind {
-        BackgroundKind::Cloud => &CLOUD,
-        BackgroundKind::Tree => &TREE,
+        BackgroundKind::CloudPuff => &CLOUD_PUFF,
+        BackgroundKind::CloudStreak => &CLOUD_STREAK,
+        BackgroundKind::TreeWide => &TREE_WIDE,
+        BackgroundKind::TreeNarrow => &TREE_NARROW,
     }
 }
 
@@ -553,11 +638,13 @@ pub fn obstacle_origin(obstacle: &Obstacle, playfield: Playfield) -> (i16, u16) 
 pub fn background_origin(object: &BackgroundObject, playfield: Playfield) -> (i16, u16) {
     let sprite = background_sprite_for(object.kind);
     let y = match object.kind {
-        BackgroundKind::Cloud => {
+        BackgroundKind::CloudPuff | BackgroundKind::CloudStreak => {
             let high_band = lane_band(Lane::High, playfield);
             high_band.top + high_band.bottom.saturating_sub(high_band.top) / 3
         }
-        BackgroundKind::Tree => playfield.height.saturating_sub(sprite.height()),
+        BackgroundKind::TreeWide | BackgroundKind::TreeNarrow => {
+            playfield.height.saturating_sub(sprite.height())
+        }
     };
     (object.x, y)
 }
@@ -739,6 +826,33 @@ mod tests {
         game.tick(Duration::from_millis(1), TEST_FIELD);
         assert_eq!(game.background_objects().len(), 1);
         assert!(!game.detect_collision(TEST_FIELD));
+    }
+
+    #[test]
+    fn background_selection_is_randomized_without_immediate_repeats() {
+        let mut game = Game::new();
+        let mut kinds = Vec::new();
+
+        for _ in 0..10 {
+            kinds.push(game.random_background_kind());
+        }
+
+        assert!(kinds.windows(2).all(|pair| pair[0] != pair[1]));
+        assert!(kinds.contains(&BackgroundKind::CloudPuff));
+        assert!(kinds.contains(&BackgroundKind::CloudStreak));
+        assert!(kinds.contains(&BackgroundKind::TreeWide));
+        assert!(kinds.contains(&BackgroundKind::TreeNarrow));
+    }
+
+    #[test]
+    fn tree_backgrounds_fill_playfield_height() {
+        for kind in [BackgroundKind::TreeWide, BackgroundKind::TreeNarrow] {
+            let object = BackgroundObject { kind, x: 0 };
+            let origin = background_origin(&object, TEST_FIELD);
+
+            assert_eq!(background_sprite_for(kind).height(), TEST_FIELD.height);
+            assert_eq!(origin.1, 0);
+        }
     }
 
     #[test]

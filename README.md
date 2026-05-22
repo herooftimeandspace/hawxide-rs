@@ -51,9 +51,10 @@ window.
 
 ## Background
 
-Clouds and trees are decorative background objects. Clouds render in light blue.
-Trees render with brown trunks and dark green leaves. They scroll more slowly
-than obstacles and never participate in collision detection.
+Clouds and trees are decorative background objects. Their sprite variants are
+randomized during play. Clouds render in light blue. Trees render with brown
+trunks and dark green leaves. They scroll more slowly than obstacles and never
+participate in collision detection.
 
 ## Development
 

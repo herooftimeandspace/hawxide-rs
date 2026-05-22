@@ -215,8 +215,10 @@ fn draw_background_object(
 ) {
     let sprite = background_sprite_for(object.kind);
     let style_for = |ch| match object.kind {
-        BackgroundKind::Cloud => Style::default().fg(Color::LightBlue),
-        BackgroundKind::Tree => match ch {
+        BackgroundKind::CloudPuff | BackgroundKind::CloudStreak => {
+            Style::default().fg(Color::LightBlue)
+        }
+        BackgroundKind::TreeWide | BackgroundKind::TreeNarrow => match ch {
             '|' => Style::default().fg(Color::Rgb(139, 69, 19)),
             _ => Style::default().fg(Color::Rgb(0, 100, 0)),
         },
