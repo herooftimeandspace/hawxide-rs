@@ -5,7 +5,7 @@ pub const MIN_SPAWN_GAP: i16 = 28;
 const BASE_SPEED_CELLS_PER_SECOND: f64 = 14.0;
 const MIN_REACTION_SECONDS: f64 = 2.4;
 const RNG_SEED: u64 = 0x4841_5758_4944_4552;
-const SPEED_GAIN_PER_SECOND: f64 = 0.12;
+const SPEED_GAIN_PER_SECOND: f64 = 0.25;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Lane {
@@ -102,7 +102,6 @@ pub struct Game {
     obstacles: Vec<Obstacle>,
     background_objects: Vec<BackgroundObject>,
     rng_state: u64,
-    last_obstacle_kind: Option<ObstacleKind>,
     last_background_kind: Option<BackgroundKind>,
     score_elapsed: Duration,
     scroll_progress: f64,
@@ -339,7 +338,6 @@ impl Game {
             obstacles: Vec::new(),
             background_objects: Vec::new(),
             rng_state: RNG_SEED,
-            last_obstacle_kind: None,
             last_background_kind: None,
             score_elapsed: Duration::ZERO,
             scroll_progress: 0.0,
@@ -477,22 +475,11 @@ impl Game {
             .wrapping_mul(6_364_136_223_846_793_005)
             .wrapping_add(1);
 
-        let mut kind = match (self.rng_state >> 32) % 3 {
+        match (self.rng_state >> 32) % 3 {
             0 => ObstacleKind::Low,
             1 => ObstacleKind::Tall,
             _ => ObstacleKind::Parachute,
-        };
-
-        if self.last_obstacle_kind == Some(kind) {
-            kind = match kind {
-                ObstacleKind::Low => ObstacleKind::Tall,
-                ObstacleKind::Tall => ObstacleKind::Parachute,
-                ObstacleKind::Parachute => ObstacleKind::Low,
-            };
         }
-
-        self.last_obstacle_kind = Some(kind);
-        kind
     }
 
     fn spawn_background_if_ready(&mut self, viewport_width: u16) {
@@ -792,15 +779,15 @@ mod tests {
     }
 
     #[test]
-    fn obstacle_selection_is_randomized_without_immediate_repeats() {
+    fn obstacle_selection_is_randomized_and_allows_immediate_repeats() {
         let mut game = Game::new();
         let mut kinds = Vec::new();
 
-        for _ in 0..8 {
+        for _ in 0..20 {
             kinds.push(game.random_obstacle_kind());
         }
 
-        assert!(kinds.windows(2).all(|pair| pair[0] != pair[1]));
+        assert!(kinds.windows(2).any(|pair| pair[0] == pair[1]));
         assert!(kinds.contains(&ObstacleKind::Low));
         assert!(kinds.contains(&ObstacleKind::Tall));
         assert!(kinds.contains(&ObstacleKind::Parachute));
