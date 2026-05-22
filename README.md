@@ -9,6 +9,10 @@ The display uses ASCII characters only. Sprite masks are shared by rendering
 and collision logic so game over happens only when visible player cells overlap
 visible obstacle cells.
 
+The hawk is drawn with ASCII characters and Ratatui colors intended to evoke a
+red-tailed hawk: brown upper markings, pale body text, yellow accents, and red
+tail markings.
+
 ## Gameplay
 
 - The hawk starts in the middle lane.
@@ -35,6 +39,12 @@ middle and low lanes. The parachute rack may occupy the combined high and
 middle lanes. Obstacle spawning preserves enough horizontal space for the
 player to step between lanes, so the game should not create impossible
 sequences.
+
+## Background
+
+Clouds and trees are decorative background objects. Clouds render in light blue.
+Trees render with brown trunks and dark green leaves. They scroll more slowly
+than obstacles and never participate in collision detection.
 
 ## Development
 

@@ -41,6 +41,12 @@ pub enum ObstacleKind {
     Parachute,
 }
 
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+pub enum BackgroundKind {
+    Cloud,
+    Tree,
+}
+
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Sprite {
     pub lines: &'static [&'static str],
@@ -77,13 +83,21 @@ pub struct Obstacle {
     pub x: i16,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct BackgroundObject {
+    pub kind: BackgroundKind,
+    pub x: i16,
+}
+
 #[derive(Clone, Debug)]
 pub struct Game {
     player_lane: Lane,
     obstacles: Vec<Obstacle>,
+    background_objects: Vec<BackgroundObject>,
     next_obstacle: usize,
     score_elapsed: Duration,
     scroll_progress: f64,
+    background_progress: f64,
     game_over: bool,
 }
 
@@ -100,7 +114,7 @@ pub struct Band {
 }
 
 pub static HAWK: Sprite = Sprite {
-    lines: &[" /\\ ", "<^^>", " \\/ "],
+    lines: &["  /^^\\  ", "<=hawk=>", "  \\__r> "],
 };
 
 pub static LOW_RACK: Sprite = Sprite {
@@ -128,14 +142,24 @@ pub static PARACHUTE_RACK: Sprite = Sprite {
     ],
 };
 
+pub static CLOUD: Sprite = Sprite {
+    lines: &["   .--.   ", " .(    ). ", "(___.__)_)"],
+};
+
+pub static TREE: Sprite = Sprite {
+    lines: &["  /\\  ", " /**\\ ", "/****\\", "  ||  ", "  ||  "],
+};
+
 impl Game {
     pub fn new() -> Self {
         Self {
             player_lane: Lane::Middle,
             obstacles: Vec::new(),
+            background_objects: Vec::new(),
             next_obstacle: 0,
             score_elapsed: Duration::ZERO,
             scroll_progress: 0.0,
+            background_progress: 0.0,
             game_over: false,
         }
     }
@@ -146,6 +170,10 @@ impl Game {
 
     pub fn obstacles(&self) -> &[Obstacle] {
         &self.obstacles
+    }
+
+    pub fn background_objects(&self) -> &[BackgroundObject] {
+        &self.background_objects
     }
 
     pub fn score(&self) -> u64 {
@@ -174,6 +202,7 @@ impl Game {
 
         self.score_elapsed += elapsed;
         self.scroll_progress += elapsed.as_secs_f64() * self.speed_cells_per_second();
+        self.background_progress += elapsed.as_secs_f64() * self.background_cells_per_second();
 
         let steps = self.scroll_progress.floor() as i16;
         if steps > 0 {
@@ -185,6 +214,17 @@ impl Game {
                 .retain(|obstacle| obstacle.x + sprite_for(obstacle.kind).width() >= 0);
         }
 
+        let background_steps = self.background_progress.floor() as i16;
+        if background_steps > 0 {
+            self.background_progress -= f64::from(background_steps);
+            for object in &mut self.background_objects {
+                object.x -= background_steps;
+            }
+            self.background_objects
+                .retain(|object| object.x + background_sprite_for(object.kind).width() >= 0);
+        }
+
+        self.spawn_background_if_ready(playfield.width);
         self.spawn_if_ready(playfield.width);
         self.apply_collision(playfield);
     }
@@ -244,8 +284,38 @@ impl Game {
         });
     }
 
+    fn spawn_background_if_ready(&mut self, viewport_width: u16) {
+        if viewport_width == 0 {
+            return;
+        }
+
+        let rightmost_edge = self
+            .background_objects
+            .iter()
+            .map(|object| object.x + background_sprite_for(object.kind).width())
+            .max();
+
+        if rightmost_edge.is_some_and(|edge| edge > viewport_width as i16 - 18) {
+            return;
+        }
+
+        let kind = if self.background_objects.len().is_multiple_of(2) {
+            BackgroundKind::Cloud
+        } else {
+            BackgroundKind::Tree
+        };
+        self.background_objects.push(BackgroundObject {
+            kind,
+            x: viewport_width as i16,
+        });
+    }
+
     fn speed_cells_per_second(&self) -> f64 {
         14.0 + (self.score() / 20) as f64
+    }
+
+    fn background_cells_per_second(&self) -> f64 {
+        4.0
     }
 }
 
@@ -260,6 +330,13 @@ pub fn sprite_for(kind: ObstacleKind) -> &'static Sprite {
         ObstacleKind::Low => &LOW_RACK,
         ObstacleKind::Truck => &TRUCK_RACK,
         ObstacleKind::Parachute => &PARACHUTE_RACK,
+    }
+}
+
+pub fn background_sprite_for(kind: BackgroundKind) -> &'static Sprite {
+    match kind {
+        BackgroundKind::Cloud => &CLOUD,
+        BackgroundKind::Tree => &TREE,
     }
 }
 
@@ -316,6 +393,18 @@ pub fn obstacle_origin(obstacle: &Obstacle, playfield: Playfield) -> (i16, u16) 
         ObstacleKind::Parachute => band.top,
     };
     (obstacle.x, y)
+}
+
+pub fn background_origin(object: &BackgroundObject, playfield: Playfield) -> (i16, u16) {
+    let sprite = background_sprite_for(object.kind);
+    let y = match object.kind {
+        BackgroundKind::Cloud => {
+            let high_band = lane_band(Lane::High, playfield);
+            high_band.top + high_band.bottom.saturating_sub(high_band.top) / 3
+        }
+        BackgroundKind::Tree => playfield.height.saturating_sub(sprite.height()),
+    };
+    (object.x, y)
 }
 
 #[cfg(test)]
@@ -396,6 +485,15 @@ mod tests {
 
         let first = &game.obstacles()[0];
         assert!(first.x + sprite_for(first.kind).width() > TEST_FIELD.width as i16 - MIN_SPAWN_GAP);
+    }
+
+    #[test]
+    fn background_objects_do_not_trigger_collision() {
+        let mut game = Game::new();
+
+        game.tick(Duration::from_millis(1), TEST_FIELD);
+        assert_eq!(game.background_objects().len(), 1);
+        assert!(!game.detect_collision(TEST_FIELD));
     }
 
     #[test]

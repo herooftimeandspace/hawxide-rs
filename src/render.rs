@@ -6,7 +6,8 @@ use ratatui::{
 };
 
 use crate::game::{
-    Game, HAWK, Lane, Obstacle, Playfield, Sprite, lane_band, obstacle_origin, sprite_for,
+    BackgroundKind, BackgroundObject, Game, HAWK, Lane, Obstacle, Playfield, Sprite,
+    background_origin, background_sprite_for, lane_band, obstacle_origin, sprite_for,
     sprite_origin_for_lane,
 };
 
@@ -53,8 +54,11 @@ impl Widget for GameWidget<'_> {
         };
 
         draw_lane_guides(inner, playfield, buf);
+        for object in self.game.background_objects() {
+            draw_background_object(inner, object, playfield, buf);
+        }
         draw_score(inner, self.game, buf);
-        draw_sprite_at(
+        draw_hawk(
             inner,
             &HAWK,
             sprite_origin_for_lane(&HAWK, self.game.player_lane(), playfield),
@@ -133,10 +137,56 @@ fn draw_score(area: Rect, game: &Game, buf: &mut Buffer) {
 
 fn draw_obstacle(area: Rect, obstacle: &Obstacle, playfield: Playfield, buf: &mut Buffer) {
     let sprite = sprite_for(obstacle.kind);
-    draw_sprite_at(area, sprite, obstacle_origin(obstacle, playfield), buf);
+    draw_sprite_at(
+        area,
+        sprite,
+        obstacle_origin(obstacle, playfield),
+        buf,
+        |_| Style::default().fg(Color::White),
+    );
 }
 
-fn draw_sprite_at(area: Rect, sprite: &Sprite, origin: (i16, u16), buf: &mut Buffer) {
+fn draw_background_object(
+    area: Rect,
+    object: &BackgroundObject,
+    playfield: Playfield,
+    buf: &mut Buffer,
+) {
+    let sprite = background_sprite_for(object.kind);
+    let style_for = |ch| match object.kind {
+        BackgroundKind::Cloud => Style::default().fg(Color::LightBlue),
+        BackgroundKind::Tree => match ch {
+            '|' => Style::default().fg(Color::Rgb(139, 69, 19)),
+            _ => Style::default().fg(Color::Rgb(0, 100, 0)),
+        },
+    };
+    draw_sprite_at(
+        area,
+        sprite,
+        background_origin(object, playfield),
+        buf,
+        style_for,
+    );
+}
+
+fn draw_hawk(area: Rect, sprite: &Sprite, origin: (i16, u16), buf: &mut Buffer) {
+    draw_sprite_at(area, sprite, origin, buf, |ch| match ch {
+        'r' | '>' => Style::default().fg(Color::Red),
+        '=' | '^' => Style::default().fg(Color::Rgb(139, 69, 19)),
+        'h' | 'a' | 'w' | 'k' => Style::default().fg(Color::White),
+        _ => Style::default().fg(Color::Yellow),
+    });
+}
+
+fn draw_sprite_at<F>(
+    area: Rect,
+    sprite: &Sprite,
+    origin: (i16, u16),
+    buf: &mut Buffer,
+    style_for: F,
+) where
+    F: Fn(char) -> Style,
+{
     for (dx, dy, ch) in sprite.occupied_cells() {
         let x = origin.0 + dx;
         let y = origin.1 + dy;
@@ -149,7 +199,7 @@ fn draw_sprite_at(area: Rect, sprite: &Sprite, origin: (i16, u16), buf: &mut Buf
         if screen_x < area.x + area.width && screen_y < area.y + area.height {
             buf[(screen_x, screen_y)]
                 .set_char(ch)
-                .set_style(Style::default().fg(Color::White));
+                .set_style(style_for(ch));
         }
     }
 }
