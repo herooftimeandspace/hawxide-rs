@@ -2,8 +2,10 @@ use std::time::Duration;
 
 pub const PLAYER_X: i16 = 8;
 pub const MIN_SPAWN_GAP: i16 = 28;
+const BASE_SPEED_CELLS_PER_SECOND: f64 = 14.0;
 const MIN_REACTION_SECONDS: f64 = 2.4;
 const RNG_SEED: u64 = 0x4841_5758_4944_4552;
+const SPEED_GAIN_PER_SECOND: f64 = 0.12;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Lane {
@@ -542,7 +544,7 @@ impl Game {
     }
 
     fn speed_cells_per_second(&self) -> f64 {
-        14.0 + (self.score() / 20) as f64
+        BASE_SPEED_CELLS_PER_SECOND + self.score_elapsed.as_secs_f64() * SPEED_GAIN_PER_SECOND
     }
 
     fn spawn_gap(&self) -> i16 {
@@ -747,6 +749,21 @@ mod tests {
         assert_eq!(game.score(), 0);
         game.tick(Duration::from_millis(1), TEST_FIELD);
         assert_eq!(game.score(), 1);
+    }
+
+    #[test]
+    fn speed_increases_continuously_with_survival_time() {
+        let mut game = Game::new();
+        game.start();
+        let starting_speed = game.speed_cells_per_second();
+
+        game.tick(Duration::from_secs(5), TEST_FIELD);
+        let early_speed = game.speed_cells_per_second();
+        game.tick(Duration::from_secs(30), TEST_FIELD);
+        let later_speed = game.speed_cells_per_second();
+
+        assert!(early_speed > starting_speed);
+        assert!(later_speed > early_speed);
     }
 
     #[test]

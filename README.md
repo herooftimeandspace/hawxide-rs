@@ -31,7 +31,8 @@ The lanes are invisible hard boundaries. Repeated upward input in the high lane
 keeps the hawk in the high lane, and repeated downward input in the low lane
 keeps the hawk in the low lane. The visible playfield is capped and centered in
 large terminals so the obstacle spacing and art proportions remain playable.
-Obstacle scroll speed gradually increases as the score rises.
+Obstacle scroll speed starts increasing immediately and continues to ramp up
+with survival time.
 
 ## Obstacles
 
