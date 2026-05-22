@@ -6,10 +6,12 @@ use ratatui::{
 };
 
 use crate::game::{
-    BackgroundKind, BackgroundObject, Game, HAWK, Lane, Obstacle, Playfield, Sprite,
-    background_origin, background_sprite_for, lane_band, obstacle_origin, sprite_for,
-    sprite_origin_for_lane,
+    BackgroundKind, BackgroundObject, Game, HAWK, Obstacle, Playfield, Sprite, background_origin,
+    background_sprite_for, obstacle_origin, sprite_for, sprite_origin_for_lane,
 };
+
+const MAX_PLAYFIELD_WIDTH: u16 = 96;
+const MAX_PLAYFIELD_HEIGHT: u16 = 36;
 
 pub struct GameWidget<'a> {
     game: &'a Game,
@@ -21,31 +23,57 @@ impl<'a> GameWidget<'a> {
     }
 
     pub fn playfield_from_area(area: Rect) -> Playfield {
+        let playfield = Self::content_area(area);
         Playfield {
-            width: area.width.saturating_sub(2),
-            height: area.height.saturating_sub(2),
+            width: playfield.width,
+            height: playfield.height,
+        }
+    }
+
+    fn frame_area(area: Rect) -> Rect {
+        let width = area.width.min(MAX_PLAYFIELD_WIDTH.saturating_add(2));
+        let height = area.height.min(MAX_PLAYFIELD_HEIGHT.saturating_add(2));
+
+        Rect {
+            x: area.x + area.width.saturating_sub(width) / 2,
+            y: area.y + area.height.saturating_sub(height) / 2,
+            width,
+            height,
+        }
+    }
+
+    fn content_area(area: Rect) -> Rect {
+        let frame = Self::frame_area(area);
+        Rect {
+            x: frame.x.saturating_add(1),
+            y: frame.y.saturating_add(1),
+            width: frame.width.saturating_sub(2),
+            height: frame.height.saturating_sub(2),
         }
     }
 }
 
 impl Widget for GameWidget<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
+        let frame = Self::frame_area(area);
         let block = Block::default()
             .title(" hawxide-rs ")
             .borders(Borders::ALL)
             .style(Style::default().fg(Color::Gray));
-        let inner = block.inner(area);
-        block.render(area, buf);
+        let content = block.inner(frame);
+        block.render(frame, buf);
 
-        if inner.width < 30 || inner.height < 12 {
+        if content.width < 30 || content.height < 12 {
             buf.set_string(
-                inner.x,
-                inner.y,
+                content.x,
+                content.y,
                 "Terminal too small for hawxide-rs",
                 Style::default().fg(Color::Yellow),
             );
             return;
         }
+
+        let inner = Self::content_area(area);
 
         if !self.game.started() {
             draw_splash(inner, buf);
@@ -57,7 +85,6 @@ impl Widget for GameWidget<'_> {
             height: inner.height,
         };
 
-        draw_lane_guides(inner, playfield, buf);
         for object in self.game.background_objects() {
             draw_background_object(inner, object, playfield, buf);
         }
@@ -148,20 +175,6 @@ fn draw_centered(area: Rect, y: u16, text: &str, style: Style, buf: &mut Buffer)
     buf.set_string(x, y, text, style);
 }
 
-fn draw_lane_guides(area: Rect, playfield: Playfield, buf: &mut Buffer) {
-    for lane in [Lane::High, Lane::Middle, Lane::Low] {
-        let band = lane_band(lane, playfield);
-        if band.top > 0 {
-            let y = area.y + band.top;
-            for x in area.x..area.x + area.width {
-                buf[(x, y)]
-                    .set_char('-')
-                    .set_style(Style::default().fg(Color::DarkGray));
-            }
-        }
-    }
-}
-
 fn draw_score(area: Rect, game: &Game, buf: &mut Buffer) {
     let score = format!("Score: {}", game.score());
     let x = area.x + area.width.saturating_sub(score.len() as u16 + 1);
@@ -175,7 +188,13 @@ fn draw_obstacle(area: Rect, obstacle: &Obstacle, playfield: Playfield, buf: &mu
         sprite,
         obstacle_origin(obstacle, playfield),
         buf,
-        |_| Style::default().fg(Color::White),
+        |ch| match ch {
+            '▌' => Style::default().fg(Color::Green),
+            '╔' | '╗' | '╚' | '╝' | '═' | '║' => Style::default().fg(Color::Gray),
+            '○' => Style::default().fg(Color::DarkGray),
+            'T' | 'R' | 'U' | 'C' | 'K' => Style::default().fg(Color::DarkGray),
+            _ => Style::default().fg(Color::White),
+        },
     );
 }
 

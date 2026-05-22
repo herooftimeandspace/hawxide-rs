@@ -7,9 +7,10 @@ Oxide rack obstacles.
 
 Gameplay sprites use ASCII characters so the collision masks are easy to read.
 The surrounding terminal UI uses Ratatui's native widgets, including UTF-8
-borders when the terminal supports them. Sprite masks are shared by rendering
-and collision logic so game over happens only when visible player cells overlap
-visible obstacle cells.
+borders when the terminal supports them. Obstacle art may use UTF-8 box drawing
+and block characters for denser Oxide rack shapes. Sprite masks are shared by
+rendering and collision logic so game over happens only when visible player
+cells overlap visible obstacle cells.
 
 The hawk is drawn with ASCII characters and Ratatui colors intended to evoke a
 red-tailed hawk: brown upper markings, pale body text, yellow accents, and red
@@ -26,9 +27,10 @@ tail markings.
 - Press `q` to quit.
 - After a collision, press `r` to restart or `q` to quit.
 
-The lanes are hard boundaries. Repeated upward input in the high lane keeps the
-hawk in the high lane, and repeated downward input in the low lane keeps the
-hawk in the low lane.
+The lanes are invisible hard boundaries. Repeated upward input in the high lane
+keeps the hawk in the high lane, and repeated downward input in the low lane
+keeps the hawk in the low lane. The visible playfield is capped and centered in
+large terminals so the obstacle spacing and art proportions remain playable.
 
 ## Obstacles
 

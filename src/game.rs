@@ -56,7 +56,7 @@ impl Sprite {
     pub fn width(&self) -> i16 {
         self.lines
             .iter()
-            .map(|line| line.len())
+            .map(|line| line.chars().count())
             .max()
             .unwrap_or(0)
             .try_into()
@@ -119,27 +119,38 @@ pub static HAWK: Sprite = Sprite {
 };
 
 pub static LOW_RACK: Sprite = Sprite {
-    lines: &["[OXIDE-RACK]", "[_________]"],
+    lines: &[
+        "╔════════════════╗",
+        "║▌▌▌▌▌▌▌▌▌▌▌▌▌▌║",
+        "║▌▌▌▌▌▌▌▌▌▌▌▌▌▌║",
+        "╚════════════════╝",
+    ],
 };
 
 pub static TRUCK_RACK: Sprite = Sprite {
     lines: &[
-        " [OXIDE]",
-        " [RACK] ",
-        " ______________ ",
-        "|__TRUCK______|",
-        "  O        O   ",
+        " ╔══════════════╗ ",
+        " ║▌▌▌▌▌▌▌▌▌▌▌▌║ ",
+        " ║▌▌▌▌▌▌▌▌▌▌▌▌║ ",
+        " ╚══════════════╝ ",
+        "    ┌────────┐    ",
+        " ┌──┴─TRUCK──┴──┐ ",
+        " └──○────────○──┘ ",
     ],
 };
 
 pub static PARACHUTE_RACK: Sprite = Sprite {
     lines: &[
-        "   ___   ",
-        " /     \\ ",
-        "/_______\\",
-        "  \\ | /  ",
-        " [OXIDE] ",
-        " [RACK]  ",
+        "     ╭────╮     ",
+        "   ╭─╯    ╰─╮   ",
+        "  ╰──────────╯  ",
+        "     ╲  ||  ╱   ",
+        "      ╲ || ╱    ",
+        "       ╲||╱     ",
+        "   ╔════════╗   ",
+        "   ║▌▌▌▌▌▌║   ",
+        "   ║▌▌▌▌▌▌║   ",
+        "   ╚════════╝   ",
     ],
 };
 
@@ -521,6 +532,12 @@ mod tests {
 
         let first = &game.obstacles()[0];
         assert!(first.x + sprite_for(first.kind).width() > TEST_FIELD.width as i16 - MIN_SPAWN_GAP);
+    }
+
+    #[test]
+    fn sprite_width_counts_utf8_characters_not_bytes() {
+        assert_eq!(LOW_RACK.width(), 18);
+        assert!(LOW_RACK.lines[0].len() > LOW_RACK.width() as usize);
     }
 
     #[test]
