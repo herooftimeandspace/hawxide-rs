@@ -2,6 +2,8 @@ use std::time::Duration;
 
 pub const PLAYER_X: i16 = 8;
 pub const MIN_SPAWN_GAP: i16 = 28;
+const MIN_REACTION_SECONDS: f64 = 2.4;
+const RNG_SEED: u64 = 0x4841_5758_4944_4552;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum Lane {
@@ -95,7 +97,8 @@ pub struct Game {
     player_lane: Lane,
     obstacles: Vec<Obstacle>,
     background_objects: Vec<BackgroundObject>,
-    next_obstacle: usize,
+    rng_state: u64,
+    last_obstacle_kind: Option<ObstacleKind>,
     score_elapsed: Duration,
     scroll_progress: f64,
     background_progress: f64,
@@ -273,7 +276,8 @@ impl Game {
             player_lane: Lane::Middle,
             obstacles: Vec::new(),
             background_objects: Vec::new(),
-            next_obstacle: 0,
+            rng_state: RNG_SEED,
+            last_obstacle_kind: None,
             score_elapsed: Duration::ZERO,
             scroll_progress: 0.0,
             background_progress: 0.0,
@@ -393,20 +397,39 @@ impl Game {
             .map(|obstacle| obstacle.x + sprite_for(obstacle.kind).width())
             .max();
 
-        if rightmost_edge.is_some_and(|edge| edge > viewport_width as i16 - MIN_SPAWN_GAP) {
+        if rightmost_edge.is_some_and(|edge| edge > viewport_width as i16 - self.spawn_gap()) {
             return;
         }
 
-        let kind = match self.next_obstacle % 3 {
-            0 => ObstacleKind::Low,
-            1 => ObstacleKind::Tall,
-            _ => ObstacleKind::Parachute,
-        };
-        self.next_obstacle += 1;
+        let kind = self.random_obstacle_kind();
         self.obstacles.push(Obstacle {
             kind,
             x: viewport_width as i16,
         });
+    }
+
+    fn random_obstacle_kind(&mut self) -> ObstacleKind {
+        self.rng_state = self
+            .rng_state
+            .wrapping_mul(6_364_136_223_846_793_005)
+            .wrapping_add(1);
+
+        let mut kind = match (self.rng_state >> 32) % 3 {
+            0 => ObstacleKind::Low,
+            1 => ObstacleKind::Tall,
+            _ => ObstacleKind::Parachute,
+        };
+
+        if self.last_obstacle_kind == Some(kind) {
+            kind = match kind {
+                ObstacleKind::Low => ObstacleKind::Tall,
+                ObstacleKind::Tall => ObstacleKind::Parachute,
+                ObstacleKind::Parachute => ObstacleKind::Low,
+            };
+        }
+
+        self.last_obstacle_kind = Some(kind);
+        kind
     }
 
     fn spawn_background_if_ready(&mut self, viewport_width: u16) {
@@ -439,9 +462,17 @@ impl Game {
         14.0 + (self.score() / 20) as f64
     }
 
+    fn spawn_gap(&self) -> i16 {
+        spawn_gap_for_speed(self.speed_cells_per_second())
+    }
+
     fn background_cells_per_second(&self) -> f64 {
         4.0
     }
+}
+
+pub fn spawn_gap_for_speed(speed_cells_per_second: f64) -> i16 {
+    MIN_SPAWN_GAP.max((speed_cells_per_second * MIN_REACTION_SECONDS).ceil() as i16)
 }
 
 impl Default for Game {
@@ -642,7 +673,33 @@ mod tests {
         assert_eq!(game.obstacles().len(), 1);
 
         let first = &game.obstacles()[0];
-        assert!(first.x + sprite_for(first.kind).width() > TEST_FIELD.width as i16 - MIN_SPAWN_GAP);
+        assert!(
+            first.x + sprite_for(first.kind).width() > TEST_FIELD.width as i16 - game.spawn_gap()
+        );
+    }
+
+    #[test]
+    fn spawn_gap_increases_with_scroll_speed() {
+        let base_gap = spawn_gap_for_speed(14.0);
+        let faster_gap = spawn_gap_for_speed(24.0);
+
+        assert!(base_gap >= MIN_SPAWN_GAP);
+        assert!(faster_gap > base_gap);
+    }
+
+    #[test]
+    fn obstacle_selection_is_randomized_without_immediate_repeats() {
+        let mut game = Game::new();
+        let mut kinds = Vec::new();
+
+        for _ in 0..8 {
+            kinds.push(game.random_obstacle_kind());
+        }
+
+        assert!(kinds.windows(2).all(|pair| pair[0] != pair[1]));
+        assert!(kinds.contains(&ObstacleKind::Low));
+        assert!(kinds.contains(&ObstacleKind::Tall));
+        assert!(kinds.contains(&ObstacleKind::Parachute));
     }
 
     #[test]

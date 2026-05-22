@@ -31,6 +31,7 @@ The lanes are invisible hard boundaries. Repeated upward input in the high lane
 keeps the hawk in the high lane, and repeated downward input in the low lane
 keeps the hawk in the low lane. The visible playfield is capped and centered in
 large terminals so the obstacle spacing and art proportions remain playable.
+Obstacle scroll speed gradually increases as the score rises.
 
 ## Obstacles
 
@@ -42,9 +43,11 @@ Three obstacle types scroll from right to left:
 
 The low rack is confined to the low lane. The tall rack may occupy the combined
 middle and low lanes. The parachute rack may occupy the combined high and
-middle lanes. Obstacle spawning preserves enough horizontal space for the
-player to step between lanes, so the game should not create impossible
-sequences.
+middle lanes. Obstacle order is randomized during play, with immediate repeats
+suppressed so the sequence does not feel like a fixed cycle. Obstacle spawning
+preserves enough horizontal space for the player to step between lanes, and the
+required spacing grows with scroll speed so faster runs still leave a reaction
+window.
 
 ## Background
 
