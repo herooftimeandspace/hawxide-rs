@@ -1,0 +1,11 @@
+[package]
+name = "hawxide-rs"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "A Ratatui ASCII terminal runner where a hawk dodges Oxide rack obstacles."
+repository = "https://github.com/herooftimeandspace/hawxide-rs"
+
+[dependencies]
+crossterm = "0.29.0"
+ratatui = "0.30.0"
