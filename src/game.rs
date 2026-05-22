@@ -130,14 +130,15 @@ pub static HAWK: Sprite = Sprite {
 
 pub static LOW_RACK: Sprite = Sprite {
     lines: &[
-        "╔══════════════════════════════════════╗",
+        "╔════════════════════════════════════╗",
         "║┌──────────────┐┌──┐┌──────────────┐║",
         "║│▓▓▓▓▓▓▓▓▓▓▓▓▓▓││░░││▓▓▓▓▓▓▓▓▓▓▓▓▓▓│║",
         "║└──────────────┘└──┘└──────────────┘║",
-        "╠══════════════════════════════════════╣",
+        "╠════════════════════════════════════╣",
         "║┌──────────────┐┌──┐┌──────────────┐║",
         "║│▓▓▓▓▓▓▓▓▓▓▓▓▓▓││░░││▓▓▓▓▓▓▓▓▓▓▓▓▓▓│║",
-        "╚══════════════════════════════════════╝",
+        "║└──────────────┘└──┘└──────────────┘║",
+        "╚════════════════════════════════════╝",
     ],
 };
 
@@ -195,11 +196,54 @@ pub static PARACHUTE_RACK: Sprite = Sprite {
 };
 
 pub static CLOUD: Sprite = Sprite {
-    lines: &["   .--.   ", " .(    ). ", "(___.__)_)"],
+    lines: &[
+        "      .----.      ",
+        "   .-(      )-.   ",
+        "  (            )  ",
+        " (__.        .__) ",
+        "    (___.___)     ",
+    ],
 };
 
 pub static TREE: Sprite = Sprite {
-    lines: &["  /\\  ", " /**\\ ", "/****\\", "  ||  ", "  ||  "],
+    lines: &[
+        "          /\\          ",
+        "         /**\\         ",
+        "        /****\\        ",
+        "       /******\\       ",
+        "      /********\\      ",
+        "     /**********\\     ",
+        "    /************\\    ",
+        "   /**************\\   ",
+        "  /****************\\  ",
+        " /******************\\ ",
+        "/********************\\",
+        "        /****\\        ",
+        "       /******\\       ",
+        "      /********\\      ",
+        "     /**********\\     ",
+        "    /************\\    ",
+        "   /**************\\   ",
+        "  /****************\\  ",
+        " /******************\\ ",
+        "/********************\\",
+        "       /******\\       ",
+        "      /********\\      ",
+        "     /**********\\     ",
+        "    /************\\    ",
+        "   /**************\\   ",
+        "  /****************\\  ",
+        " /******************\\ ",
+        "/********************\\",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+    ],
 };
 
 impl Game {
@@ -447,9 +491,8 @@ pub fn sprite_origin_for_lane(sprite: &Sprite, lane: Lane, playfield: Playfield)
 pub fn obstacle_origin(obstacle: &Obstacle, playfield: Playfield) -> (i16, u16) {
     let sprite = sprite_for(obstacle.kind);
     let band = obstacle_band(obstacle.kind, playfield);
-    let available_height = band.bottom.saturating_sub(band.top);
     let y = match obstacle.kind {
-        ObstacleKind::Low => band.top + available_height.saturating_sub(sprite.height()) / 2,
+        ObstacleKind::Low => band.bottom.saturating_sub(sprite.height()),
         ObstacleKind::Tall => band.top,
         ObstacleKind::Parachute => band.top,
     };
@@ -584,8 +627,19 @@ mod tests {
 
     #[test]
     fn sprite_width_counts_utf8_characters_not_bytes() {
-        assert_eq!(LOW_RACK.width(), 40);
+        assert_eq!(LOW_RACK.width(), 38);
         assert!(LOW_RACK.lines[0].len() > LOW_RACK.width() as usize);
+    }
+
+    #[test]
+    fn low_rack_bottom_touches_playfield_bottom() {
+        let obstacle = Obstacle {
+            kind: ObstacleKind::Low,
+            x: TEST_FIELD.width as i16,
+        };
+        let origin = obstacle_origin(&obstacle, TEST_FIELD);
+
+        assert_eq!(origin.1 + LOW_RACK.height(), TEST_FIELD.height);
     }
 
     #[test]
