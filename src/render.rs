@@ -233,9 +233,11 @@ fn draw_background_object(
 
 fn draw_hawk(area: Rect, sprite: &Sprite, origin: (i16, u16), buf: &mut Buffer) {
     draw_sprite_at(area, sprite, origin, buf, |ch| match ch {
-        'r' | '>' => Style::default().fg(Color::Red),
-        '=' | '^' => Style::default().fg(Color::Rgb(139, 69, 19)),
-        'h' | 'a' | 'w' | 'k' => Style::default().fg(Color::White),
+        'r' => Style::default().fg(Color::Red),
+        '@' => Style::default().fg(Color::Rgb(139, 69, 19)),
+        '%' | '#' => Style::default().fg(Color::Rgb(92, 64, 51)),
+        '=' | '+' => Style::default().fg(Color::Rgb(238, 214, 175)),
+        '>' => Style::default().fg(Color::Yellow),
         _ => Style::default().fg(Color::Yellow),
     });
 }

@@ -115,7 +115,15 @@ pub struct Band {
 }
 
 pub static HAWK: Sprite = Sprite {
-    lines: &["  /^^\\  ", "<=hawk=>", "  \\__r> "],
+    lines: &[
+        "        @@@@#        ",
+        "     @@@@%%@@@#      ",
+        "  @@@@#%%==#@@@>    ",
+        "@@#==  %@@@%  +@@r  ",
+        "  @@@@#==#@@@#@@r   ",
+        "     @@%%##%@@r     ",
+        "        @@@r        ",
+    ],
 };
 
 pub static LOW_RACK: Sprite = Sprite {
@@ -526,6 +534,14 @@ mod tests {
     }
 
     #[test]
+    fn hawk_fits_inside_each_lane() {
+        for lane in [Lane::High, Lane::Middle, Lane::Low] {
+            let band = lane_band(lane, TEST_FIELD);
+            assert!(HAWK.height() <= band.bottom - band.top);
+        }
+    }
+
+    #[test]
     fn scoring_counts_survived_seconds() {
         let mut game = Game::new();
         game.start();
@@ -577,7 +593,7 @@ mod tests {
     #[test]
     fn transparent_sprite_space_does_not_collide() {
         let mut game = Game::new();
-        game.force_obstacle_for_test(ObstacleKind::Truck, PLAYER_X + 10);
+        game.force_obstacle_for_test(ObstacleKind::Truck, PLAYER_X + HAWK.width() + 2);
 
         assert!(!game.detect_collision(TEST_FIELD));
     }
