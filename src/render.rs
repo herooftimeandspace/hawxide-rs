@@ -12,6 +12,8 @@ use crate::game::{
 
 const MAX_PLAYFIELD_WIDTH: u16 = 96;
 const MAX_PLAYFIELD_HEIGHT: u16 = 36;
+const MIN_PLAYFIELD_WIDTH: u16 = 70;
+const MIN_PLAYFIELD_HEIGHT: u16 = 36;
 
 pub struct GameWidget<'a> {
     game: &'a Game,
@@ -63,11 +65,11 @@ impl Widget for GameWidget<'_> {
         let content = block.inner(frame);
         block.render(frame, buf);
 
-        if content.width < 30 || content.height < 12 {
+        if content.width < MIN_PLAYFIELD_WIDTH || content.height < MIN_PLAYFIELD_HEIGHT {
             buf.set_string(
                 content.x,
                 content.y,
-                "Terminal too small for hawxide-rs",
+                "Terminal too small for hawxide-rs; resize to at least 72x38",
                 Style::default().fg(Color::Yellow),
             );
             return;
@@ -189,8 +191,13 @@ fn draw_obstacle(area: Rect, obstacle: &Obstacle, playfield: Playfield, buf: &mu
         obstacle_origin(obstacle, playfield),
         buf,
         |ch| match ch {
-            '▌' => Style::default().fg(Color::Green),
-            '╔' | '╗' | '╚' | '╝' | '═' | '║' => Style::default().fg(Color::Gray),
+            '▓' | '░' | '▌' => Style::default().fg(Color::LightGreen),
+            '╔' | '╗' | '╚' | '╝' | '═' | '║' | '╠' | '╣' => {
+                Style::default().fg(Color::Gray)
+            }
+            '┌' | '┐' | '└' | '┘' | '┬' | '┴' | '─' | '│' => {
+                Style::default().fg(Color::Gray)
+            }
             '○' => Style::default().fg(Color::DarkGray),
             'T' | 'R' | 'U' | 'C' | 'K' => Style::default().fg(Color::DarkGray),
             _ => Style::default().fg(Color::White),

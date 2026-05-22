@@ -120,10 +120,17 @@ pub static HAWK: Sprite = Sprite {
 
 pub static LOW_RACK: Sprite = Sprite {
     lines: &[
-        "╔════════════════╗",
-        "║▌▌▌▌▌▌▌▌▌▌▌▌▌▌║",
-        "║▌▌▌▌▌▌▌▌▌▌▌▌▌▌║",
-        "╚════════════════╝",
+        "╔═════════════════════════════════════════════════════════════╗",
+        "║┌──────────────────────────┐┌───┐┌──────────────────────────┐║",
+        "║│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓││░░░││▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│║",
+        "║│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓││░░░││▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│║",
+        "║└──────────────────────────┘└───┘└──────────────────────────┘║",
+        "╠═════════════════════════════════════════════════════════════╣",
+        "║┌──────────────────────────┐┌───┐┌──────────────────────────┐║",
+        "║│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓││░░░││▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│║",
+        "║│▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓││░░░││▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓│║",
+        "║└──────────────────────────┘└───┘└──────────────────────────┘║",
+        "╚═════════════════════════════════════════════════════════════╝",
     ],
 };
 
@@ -433,8 +440,8 @@ mod tests {
     use super::*;
 
     const TEST_FIELD: Playfield = Playfield {
-        width: 80,
-        height: 24,
+        width: 96,
+        height: 36,
     };
 
     #[test]
@@ -485,14 +492,14 @@ mod tests {
 
     #[test]
     fn obstacle_bands_match_their_allowed_vertical_space() {
-        assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).top, 16);
-        assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).bottom, 24);
-        assert_eq!(obstacle_band(ObstacleKind::Truck, TEST_FIELD).top, 8);
-        assert_eq!(obstacle_band(ObstacleKind::Truck, TEST_FIELD).bottom, 24);
+        assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).top, 24);
+        assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).bottom, 36);
+        assert_eq!(obstacle_band(ObstacleKind::Truck, TEST_FIELD).top, 12);
+        assert_eq!(obstacle_band(ObstacleKind::Truck, TEST_FIELD).bottom, 36);
         assert_eq!(obstacle_band(ObstacleKind::Parachute, TEST_FIELD).top, 0);
         assert_eq!(
             obstacle_band(ObstacleKind::Parachute, TEST_FIELD).bottom,
-            16
+            24
         );
     }
 
@@ -536,7 +543,7 @@ mod tests {
 
     #[test]
     fn sprite_width_counts_utf8_characters_not_bytes() {
-        assert_eq!(LOW_RACK.width(), 18);
+        assert_eq!(LOW_RACK.width(), 63);
         assert!(LOW_RACK.lines[0].len() > LOW_RACK.width() as usize);
     }
 
