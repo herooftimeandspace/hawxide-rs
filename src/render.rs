@@ -2,7 +2,7 @@ use ratatui::{
     buffer::Buffer,
     layout::Rect,
     style::{Color, Style},
-    widgets::Widget,
+    widgets::{Block, Borders, Widget},
 };
 
 use crate::game::{
@@ -30,13 +30,12 @@ impl<'a> GameWidget<'a> {
 
 impl Widget for GameWidget<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        draw_ascii_border(area, buf);
-        let inner = Rect {
-            x: area.x.saturating_add(1),
-            y: area.y.saturating_add(1),
-            width: area.width.saturating_sub(2),
-            height: area.height.saturating_sub(2),
-        };
+        let block = Block::default()
+            .title(" hawxide-rs ")
+            .borders(Borders::ALL)
+            .style(Style::default().fg(Color::Gray));
+        let inner = block.inner(area);
+        block.render(area, buf);
 
         if inner.width < 30 || inner.height < 12 {
             buf.set_string(
@@ -147,36 +146,6 @@ fn draw_centered(area: Rect, y: u16, text: &str, style: Style, buf: &mut Buffer)
 
     let x = area.x + area.width.saturating_sub(text.len() as u16) / 2;
     buf.set_string(x, y, text, style);
-}
-
-fn draw_ascii_border(area: Rect, buf: &mut Buffer) {
-    if area.width < 2 || area.height < 2 {
-        return;
-    }
-
-    let border_style = Style::default().fg(Color::Gray);
-    let left = area.x;
-    let right = area.x + area.width - 1;
-    let top = area.y;
-    let bottom = area.y + area.height - 1;
-
-    for x in left..=right {
-        buf[(x, top)].set_char('-').set_style(border_style);
-        buf[(x, bottom)].set_char('-').set_style(border_style);
-    }
-    for y in top..=bottom {
-        buf[(left, y)].set_char('|').set_style(border_style);
-        buf[(right, y)].set_char('|').set_style(border_style);
-    }
-
-    buf[(left, top)].set_char('+').set_style(border_style);
-    buf[(right, top)].set_char('+').set_style(border_style);
-    buf[(left, bottom)].set_char('+').set_style(border_style);
-    buf[(right, bottom)].set_char('+').set_style(border_style);
-
-    if area.width > 14 {
-        buf.set_string(left + 2, top, " hawxide-rs ", border_style);
-    }
 }
 
 fn draw_lane_guides(area: Rect, playfield: Playfield, buf: &mut Buffer) {

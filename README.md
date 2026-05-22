@@ -5,7 +5,9 @@
 Dinosaur game, but the player is a hawk navigating three vertical lanes of
 Oxide rack obstacles.
 
-The display uses ASCII characters only. Sprite masks are shared by rendering
+Gameplay sprites use ASCII characters so the collision masks are easy to read.
+The surrounding terminal UI uses Ratatui's native widgets, including UTF-8
+borders when the terminal supports them. Sprite masks are shared by rendering
 and collision logic so game over happens only when visible player cells overlap
 visible obstacle cells.
 
