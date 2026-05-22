@@ -155,6 +155,8 @@ pub static TALL_RACK: Sprite = Sprite {
         "║│▓▓▓▓▓│▓▓▓▓▓│║",
         "║│▓▓▓▓▓│▓▓▓▓▓│║",
         "║│▓▓▓▓▓│▓▓▓▓▓│║",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║",
         "║└─────┴─────┘║",
         "╠═════════════╣",
         "║┌─────┬─────┐║",
@@ -168,6 +170,8 @@ pub static TALL_RACK: Sprite = Sprite {
         "║│▓▓▓▓▓│▓▓▓▓▓│║",
         "║│▓▓▓▓▓│▓▓▓▓▓│║",
         "║│▓▓▓▓▓│▓▓▓▓▓│║",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║",
         "║└─────┴─────┘║",
         "╚═════════════╝",
     ],
@@ -175,25 +179,33 @@ pub static TALL_RACK: Sprite = Sprite {
 
 pub static PARACHUTE_RACK: Sprite = Sprite {
     lines: &[
-        "        /`--,              ",
-        "        \\      `--,__      ",
-        "         '--.__      ';    ",
-        "         '; ;  '--.__/     ",
-        "          ';;   ;  ,'      ",
-        "            ;  ; ,'        ",
-        "            '-,'           ",
-        "             ╲ ╱           ",
-        "              ╳            ",
-        "             ╱ ╲           ",
-        "            ╱   ╲          ",
-        "             ╔════╗        ",
-        "            ╱║┌──┐║        ",
-        "           ╱ ║│▓▓│║        ",
-        "          ╱  ╠════╣        ",
-        "         ╱   ║│░░│║        ",
-        "        ╱    ╠════╣        ",
-        "       ╱     ║│▓▓│║        ",
-        "      ╱      ╚════╝        ",
+        "   /`--,            ",
+        "   \\      `--,__    ",
+        "    '--.__      ';  ",
+        "    '; ;  '--.__/   ",
+        "     ';;   ;  ,'    ",
+        "       ;  ; ,'      ",
+        "       '-,'         ",
+        "        ╲ ╱         ",
+        "╔═════════════╗     ",
+        "║┌─────┬─────┐║     ",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║     ",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║     ",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║     ",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║     ",
+        "║└─────┴─────┘║     ",
+        "╠═════════════╣     ",
+        "║┌─────┬─────┐║     ",
+        "║│░░░░░│░░░░░│║     ",
+        "║└─────┴─────┘║     ",
+        "╠═════════════╣     ",
+        "║┌─────┬─────┐║     ",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║     ",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║     ",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║     ",
+        "║│▓▓▓▓▓│▓▓▓▓▓│║     ",
+        "║└─────┴─────┘║     ",
+        "╚═════════════╝     ",
     ],
 };
 
@@ -237,6 +249,12 @@ pub static TREE: Sprite = Sprite {
         "  /****************\\  ",
         " /******************\\ ",
         "/********************\\",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
+        "          ||          ",
         "          ||          ",
         "          ||          ",
         "          ||          ",
@@ -519,7 +537,7 @@ mod tests {
 
     const TEST_FIELD: Playfield = Playfield {
         width: 96,
-        height: 36,
+        height: 42,
     };
 
     #[test]
@@ -570,14 +588,14 @@ mod tests {
 
     #[test]
     fn obstacle_bands_match_their_allowed_vertical_space() {
-        assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).top, 24);
-        assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).bottom, 36);
-        assert_eq!(obstacle_band(ObstacleKind::Tall, TEST_FIELD).top, 12);
-        assert_eq!(obstacle_band(ObstacleKind::Tall, TEST_FIELD).bottom, 36);
+        assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).top, 28);
+        assert_eq!(obstacle_band(ObstacleKind::Low, TEST_FIELD).bottom, 42);
+        assert_eq!(obstacle_band(ObstacleKind::Tall, TEST_FIELD).top, 14);
+        assert_eq!(obstacle_band(ObstacleKind::Tall, TEST_FIELD).bottom, 42);
         assert_eq!(obstacle_band(ObstacleKind::Parachute, TEST_FIELD).top, 0);
         assert_eq!(
             obstacle_band(ObstacleKind::Parachute, TEST_FIELD).bottom,
-            24
+            28
         );
     }
 

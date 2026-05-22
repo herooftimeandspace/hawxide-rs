@@ -11,9 +11,9 @@ use crate::game::{
 };
 
 const MAX_PLAYFIELD_WIDTH: u16 = 96;
-const MAX_PLAYFIELD_HEIGHT: u16 = 36;
+const MAX_PLAYFIELD_HEIGHT: u16 = 42;
 const MIN_PLAYFIELD_WIDTH: u16 = 70;
-const MIN_PLAYFIELD_HEIGHT: u16 = 36;
+const MIN_PLAYFIELD_HEIGHT: u16 = 42;
 
 pub struct GameWidget<'a> {
     game: &'a Game,
@@ -69,7 +69,7 @@ impl Widget for GameWidget<'_> {
             buf.set_string(
                 content.x,
                 content.y,
-                "Terminal too small for hawxide-rs; resize to at least 72x38",
+                "Terminal too small for hawxide-rs; resize to at least 72x44",
                 Style::default().fg(Color::Yellow),
             );
             return;
