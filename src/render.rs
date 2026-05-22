@@ -198,6 +198,7 @@ fn draw_obstacle(area: Rect, obstacle: &Obstacle, playfield: Playfield, buf: &mu
             '╭' | '╮' | '╰' | '╯' | '╱' | '╲' | '╳' => {
                 Style::default().fg(Color::Gray)
             }
+            '/' | '\\' | '`' | '\'' | ',' | ';' => Style::default().fg(Color::Gray),
             '┌' | '┐' | '└' | '┘' | '┬' | '┴' | '─' | '│' => {
                 Style::default().fg(Color::Gray)
             }
